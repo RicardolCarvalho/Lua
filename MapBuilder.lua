@@ -8,8 +8,8 @@ local MAP_CONFIG = {
     RIVER_WIDTH = 100,
     WATER_DEPTH = 5,
     BANK_HEIGHT = 8,
-    CHECKPOINT_COUNT = 8,
-    BASE_Y = 10 -- altura base do rio
+    BASE_Y = 1, -- altura base do rio
+    BARRIER_POSITION = 810 -- posição X da barreira (RIVER_LENGTH + 10)
 }
 
 -- Função para criar o rio principal
@@ -48,50 +48,6 @@ local function createRiver()
     return water, leftBank, rightBank
 end
 
--- Função para criar checkpoints
-local function createCheckpoints()
-    local checkpoints = {}
-    local spacing = MAP_CONFIG.RIVER_LENGTH / (MAP_CONFIG.CHECKPOINT_COUNT + 1)
-    
-    for i = 1, MAP_CONFIG.CHECKPOINT_COUNT do
-        local checkpoint = Instance.new("Part")
-        checkpoint.Name = "Checkpoint" .. i
-        checkpoint.Size = Vector3.new(2, 20, MAP_CONFIG.RIVER_WIDTH + 10)
-        checkpoint.Position = Vector3.new(spacing * i, MAP_CONFIG.BASE_Y + 10, 0)
-        checkpoint.Anchored = true
-        checkpoint.Material = Enum.Material.Neon
-        checkpoint.BrickColor = BrickColor.new("Bright yellow")
-        checkpoint.Transparency = 0.3
-        checkpoint.Parent = workspace
-        
-        -- Efeito de brilho
-        local pointLight = Instance.new("PointLight")
-        pointLight.Parent = checkpoint
-        pointLight.Color = Color3.fromRGB(255, 255, 0)
-        pointLight.Range = 30
-        pointLight.Brightness = 3
-        
-        -- Texto do checkpoint
-        local textLabel = Instance.new("BillboardGui")
-        textLabel.Size = UDim2.new(0, 100, 0, 40)
-        textLabel.StudsOffset = Vector3.new(0, 15, 0)
-        textLabel.Parent = checkpoint
-        
-        local text = Instance.new("TextLabel")
-        text.Size = UDim2.new(1, 0, 1, 0)
-        text.BackgroundTransparency = 1
-        text.Text = "CP " .. i
-        text.TextColor3 = Color3.fromRGB(255, 255, 0)
-        text.TextScaled = true
-        text.Font = Enum.Font.GothamBold
-        text.Parent = textLabel
-        
-        table.insert(checkpoints, checkpoint)
-    end
-    
-    return checkpoints
-end
-
 -- Função para criar linha de chegada
 local function createFinishLine()
     local finishLine = Instance.new("Part")
@@ -103,6 +59,7 @@ local function createFinishLine()
     finishLine.BrickColor = BrickColor.new("Bright red")
     finishLine.Transparency = 0.2
     finishLine.Parent = workspace
+    finishLine.CanCollide = false
     
     -- Efeito de luz na linha de chegada
     local finishLight = Instance.new("PointLight")
@@ -253,6 +210,20 @@ local function createObstacles()
     return obstacles
 end
 
+-- Função para criar barreira invisível no final do rio
+local function createEndBarrier()
+    local barrier = Instance.new("Part")
+    barrier.Name = "EndBarrier"
+    barrier.Size = Vector3.new(20, 30, MAP_CONFIG.RIVER_WIDTH + 40)
+    barrier.Position = Vector3.new(MAP_CONFIG.BARRIER_POSITION, MAP_CONFIG.BASE_Y + 15, 0)
+    barrier.Anchored = true
+    barrier.Transparency = 1 -- Tornar invisível
+    barrier.CanCollide = true
+    barrier.Parent = workspace
+    
+    return barrier
+end
+
 -- Função para configurar iluminação
 local function setupLighting()
     Lighting.Ambient = Color3.fromRGB(100, 150, 255) -- Luz azul clara
@@ -273,11 +244,11 @@ local function buildMap()
     -- Criar rio e margens
     local water, leftBank, rightBank = createRiver()
     
-    -- Criar checkpoints
-    local checkpoints = createCheckpoints()
-    
     -- Criar linha de chegada
     local finishLine = createFinishLine()
+    
+    -- Criar barreira no final do rio
+    local endBarrier = createEndBarrier()
     
     -- Criar área de spawn
     local spawnArea, spawnLocation = createSpawnArea()
@@ -290,7 +261,8 @@ local function buildMap()
     
     print("Mapa construído com sucesso!")
     print("- Rio: " .. MAP_CONFIG.RIVER_LENGTH .. "x" .. MAP_CONFIG.RIVER_WIDTH)
-    print("- Checkpoints: " .. #checkpoints)
+    print("- Linha de chegada criada")
+    print("- Barreira invisível de fim do rio criada")
     print("- Decorações: " .. #decorations)
     print("- Obstáculos: " .. #obstacles)
     
@@ -298,8 +270,8 @@ local function buildMap()
         water = water,
         leftBank = leftBank,
         rightBank = rightBank,
-        checkpoints = checkpoints,
         finishLine = finishLine,
+        endBarrier = endBarrier,
         spawnArea = spawnArea,
         spawnLocation = spawnLocation,
         decorations = decorations,
